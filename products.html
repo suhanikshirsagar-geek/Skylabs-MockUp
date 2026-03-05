@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>All Products | Skylabs Audio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400;1,600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --black:      #0a0608;
+  --black-deep: #050304;
+  --black-warm: #120810;
+  --burgundy:   #5c1520;
+  --green:      #152b20;
+  --brass:      #2baccc;
+  --brass-lt:   #7ed0e8;
+  --brass-dk:   #53c2f6;
+  --cream:      #f0e8d8;
+  --mist:       #8b8478;
+  --ff: 'Cormorant Garamond', serif;
+  --fm: 'Space Mono', monospace;
+}
+
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box }
+html { scroll-behavior:smooth }
+body { font-family:var(--fm); background:var(--black); color:var(--cream); overflow-x:hidden; line-height:1.6; cursor:none }
+
+/* GRAIN */
+body::before {
+  content:''; position:fixed; inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity:0.04; pointer-events:none; z-index:9999;
+}
+
+/* CURSOR */
+#cur {
+  position:fixed; width:10px; height:10px;
+  background:var(--brass); border-radius:50%;
+  pointer-events:none; z-index:99999;
+  transform:translate(-50%,-50%);
+  mix-blend-mode:screen;
+  transition:width .3s, height .3s, opacity .3s;
+}
+#cur.hover { width:46px; height:46px; opacity:.4 }
+#cur.pill  { width:36px; height:36px; background:transparent; border:1px solid var(--brass); opacity:.65 }
+
+/* PROGRESS */
+#bar { position:fixed; top:0; left:0; height:2px; width:0; background:var(--brass); z-index:9998; transition:width .05s linear }
+
+/* ═══════════════════════════════
+   NAV
+═══════════════════════════════ */
+.nav {
+  position:fixed; top:0; left:0; width:100%; z-index:1000;
+  padding:1.5rem 3rem;
+  display:flex; justify-content:space-between; align-items:center;
+  background:rgba(10,6,8,.96);
+  backdrop-filter:blur(10px);
+}
+.nav-logo {
+  font-family:var(--ff); font-size:1.5rem; font-weight:600;
+  letter-spacing:.06em; color:var(--cream); text-decoration:none;
+}
+.nav-logo span { color:var(--brass) }
+.nav-links { display:flex; gap:3rem; list-style:none }
+.nav-links a {
+  font-size:.75rem; letter-spacing:.15em; text-transform:uppercase;
+  color:var(--cream); text-decoration:none;
+  position:relative; padding:.5rem 0;
+}
+.nav-links a::after {
+  content:''; position:absolute; bottom:0; left:0;
+  width:0; height:1px; background:var(--brass);
+  transition:width .3s ease;
+}
+.nav-links a:hover::after, .nav-links a.active::after { width:100% }
+
+/* ═══════════════════════════════
+   PAGE HEADER
+═══════════════════════════════ */
+.page-header {
+  padding:12rem 3rem 6rem;
+  background:var(--black-warm);
+  position:relative; overflow:hidden;
+}
+.page-header::before {
+  content:'COLLECTION';
+  position:absolute; bottom:-3rem; right:3rem;
+  font-family:var(--ff); font-size:15rem; font-weight:600;
+  color:var(--brass); opacity:.03; line-height:1; letter-spacing:-.02em;
+  pointer-events:none;
+}
+.page-header-content {
+  max-width:1400px; margin:0 auto;
+  display:flex; justify-content:space-between; align-items:flex-end;
+}
+.page-header-text { max-width:700px }
+.page-tag {
+  font-size:.7rem; letter-spacing:.3em; text-transform:uppercase;
+  color:var(--brass); margin-bottom:1.5rem;
+  display:flex; align-items:center; gap:1rem;
+}
+.page-tag::before { content:''; width:40px; height:1px; background:var(--brass) }
+.page-title {
+  font-family:var(--ff); font-size:clamp(3rem,6vw,5rem);
+  font-weight:500; line-height:1.1; margin-bottom:1.5rem;
+}
+.page-title em { font-style:italic; color:var(--brass) }
+.page-description { color:var(--mist); font-size:1.1rem; line-height:1.8; max-width:500px }
+.page-header-stats { text-align:right }
+.stat-number { font-family:var(--ff); font-size:4rem; color:var(--brass); line-height:1 }
+.stat-label { font-size:.7rem; letter-spacing:.2em; text-transform:uppercase; color:var(--mist); margin-top:.5rem }
+
+/* ═══════════════════════════════
+   FILTER BAR
+═══════════════════════════════ */
+.filter-bar {
+  padding:2rem 3rem;
+  background:var(--black);
+  border-bottom:1px solid rgba(196,154,46,.1);
+  position:sticky; top:76px; z-index:100;
+}
+.filter-wrapper {
+  max-width:1400px; margin:0 auto;
+  display:flex; justify-content:space-between; align-items:center;
+}
+.filter-categories { display:flex; gap:.5rem }
+.filter-btn {
+  font-family:var(--fm); font-size:.7rem; letter-spacing:.1em; text-transform:uppercase;
+  padding:.75rem 1.5rem;
+  background:transparent; border:1px solid rgba(196,154,46,.2);
+  color:var(--mist); cursor:pointer; transition:all .3s ease;
+}
+.filter-btn:hover, .filter-btn.active {
+  background:var(--brass); border-color:var(--brass); color:var(--black);
+}
+.filter-view { display:flex; gap:.5rem }
+.view-btn {
+  width:40px; height:40px;
+  background:transparent; border:1px solid rgba(196,154,46,.2);
+  color:var(--mist); cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  transition:all .3s ease;
+}
+.view-btn:hover, .view-btn.active { border-color:var(--brass); color:var(--brass) }
+.view-btn svg { width:18px; height:18px }
+
+/* ═══════════════════════════════
+   PRODUCTS — EDITORIAL LAYOUT
+═══════════════════════════════ */
+.section-products { padding:4rem 3rem 10rem; background:var(--black) }
+.products-editorial { max-width:1600px; margin:0 auto }
+
+/* GRID ROWS */
+.editorial-row { display:grid; gap:2rem; margin-bottom:4rem }
+.editorial-row.layout-1 { grid-template-columns:1.5fr 1fr }
+.editorial-row.layout-2 { grid-template-columns:1fr 1fr 1fr }
+.editorial-row.layout-3 { grid-template-columns:1fr 1.8fr }
+.editorial-row.layout-4 { grid-template-columns:1fr 1fr; gap:3rem }
+
+/* FILM STRIP */
+.film-strip {
+  display:flex; gap:1.5rem;
+  padding:3rem 0;
+  border-top:1px solid rgba(196,154,46,.1);
+  border-bottom:1px solid rgba(196,154,46,.1);
+  margin:4rem 0;
+  overflow-x:auto; scrollbar-width:none;
+}
+.film-strip::-webkit-scrollbar { display:none }
+.film-strip::before, .film-strip::after { content:''; flex:0 0 2rem }
+.film-frame { flex:0 0 280px; position:relative }
+.film-frame::before, .film-frame::after {
+  content:''; position:absolute; left:0; right:0; height:15px;
+  background:repeating-linear-gradient(90deg,var(--black-warm) 0,var(--black-warm) 8px,transparent 8px,transparent 12px);
+  z-index:3;
+}
+.film-frame::before { top:0 }
+.film-frame::after  { bottom:0 }
+
+/* PRODUCT ARTIFACT CARD */
+.product-artifact {
+  position:relative; overflow:hidden;
+  cursor:pointer; text-decoration:none; display:block;
+}
+.product-artifact.large  { height:650px }
+.product-artifact.medium { height:500px }
+.product-artifact.small  { height:400px }
+.product-artifact.film   { height:350px; padding:15px 0 }
+
+.artifact-image { position:relative; width:100%; height:100%; overflow:hidden }
+.artifact-image img {
+  width:100%; height:100%; object-fit:cover;
+  filter:saturate(.82) contrast(1.06) sepia(12%) brightness(.85);
+  transition:transform .9s cubic-bezier(.22,1,.36,1), filter .5s;
+}
+.product-artifact:hover .artifact-image img {
+  transform:scale(1.05);
+  filter:saturate(.96) contrast(1.04) sepia(4%) brightness(.95);
+}
+.artifact-image::after {
+  content:''; position:absolute; bottom:0; left:0;
+  width:100%; height:60%;
+  background:linear-gradient(to top, rgba(10,6,8,.97), transparent);
+  transition:opacity .4s;
+}
+
+/* border reveal */
+.product-artifact::after {
+  content:''; position:absolute; inset:0;
+  border:1px solid transparent; pointer-events:none; z-index:5;
+  transition:border-color .35s;
+}
+.product-artifact:hover::after { border-color:rgba(196,154,46,.35) }
+
+/* brass ambient glow */
+.art-glow {
+  position:absolute; inset:0;
+  background:radial-gradient(ellipse at 30% 70%, rgba(196,154,46,.14) 0%, transparent 65%);
+  opacity:0; transition:opacity .5s; pointer-events:none; z-index:1;
+}
+.product-artifact:hover .art-glow { opacity:1 }
+
+.artifact-number {
+  position:absolute; top:1.5rem; left:1.5rem;
+  font-size:.65rem; letter-spacing:.15em;
+  color:var(--brass); opacity:.6; z-index:3;
+}
+.artifact-badge {
+  position:absolute; top:1.5rem; right:1.5rem;
+  font-size:.6rem; letter-spacing:.15em; text-transform:uppercase;
+  padding:.4rem .8rem; background:var(--brass); color:var(--black); z-index:3;
+}
+.artifact-content {
+  position:absolute; bottom:0; left:0; right:0;
+  padding:2rem; z-index:4;
+  transform:translateY(20px); opacity:.9;
+  transition:transform .4s ease, opacity .35s;
+}
+.product-artifact:hover .artifact-content { transform:translateY(0); opacity:1 }
+
+.artifact-brand {
+  font-size:.65rem; letter-spacing:.25em; text-transform:uppercase;
+  color:var(--brass); margin-bottom:.75rem; display:block;
+}
+.artifact-name {
+  font-family:var(--ff); font-size:1.5rem; font-weight:400;
+  color:var(--cream); line-height:1.3; margin-bottom:.75rem;
+}
+.product-artifact.large .artifact-name { font-size:2rem }
+.artifact-description {
+  font-size:.85rem; color:var(--mist); line-height:1.65;
+  margin-bottom:1rem; max-width:400px;
+}
+.artifact-footer { display:flex; justify-content:space-between; align-items:center }
+.artifact-price { font-size:1rem; color:var(--cream) }
+.artifact-link {
+  font-size:.65rem; letter-spacing:.15em; text-transform:uppercase;
+  color:var(--brass); display:flex; align-items:center; gap:.5rem;
+}
+.artifact-link svg { width:14px; height:14px; transition:transform .3s }
+.product-artifact:hover .artifact-link svg { transform:translateX(5px) }
+
+/* SECTION DIVIDER */
+.section-divider {
+  display:flex; align-items:center; gap:2rem; margin:5rem 0;
+}
+.divider-line { flex:1; height:1px; background:rgba(196,154,46,.15) }
+.divider-text {
+  font-family:var(--ff); font-size:1.25rem; font-style:italic; color:var(--brass);
+}
+
+/* QUOTE BLOCK */
+.quote-block {
+  padding:4rem; background:var(--black-warm); margin:4rem 0; position:relative;
+}
+.quote-block::before {
+  content:'"'; position:absolute; top:1rem; left:2rem;
+  font-family:var(--ff); font-size:8rem; color:var(--brass);
+  opacity:.1; line-height:1; pointer-events:none;
+}
+.quote-text {
+  font-family:var(--ff); font-size:1.75rem; font-style:italic;
+  line-height:1.5; color:var(--cream); max-width:800px;
+  position:relative; z-index:2;
+}
+.quote-author {
+  font-size:.75rem; letter-spacing:.15em; text-transform:uppercase;
+  color:var(--brass); margin-top:2rem;
+}
+
+/* ═══════════════════════════════
+   FOOTER
+═══════════════════════════════ */
+.footer { padding:6rem 3rem 3rem; background:var(--black-deep) }
+.footer-wrapper { max-width:1400px; margin:0 auto }
+.footer-top {
+  display:grid; grid-template-columns:2fr 1fr 1fr 1fr; gap:4rem;
+  padding-bottom:4rem; border-bottom:1px solid rgba(196,154,46,.1);
+}
+.footer-brand { max-width:300px }
+.footer-logo {
+  font-family:var(--ff); font-size:1.75rem; font-weight:600; margin-bottom:1.5rem; color:var(--cream);
+}
+.footer-logo span { color:var(--brass) }
+.footer-tagline { color:var(--mist); font-size:.95rem; line-height:1.7 }
+.footer-column h4 {
+  font-size:.7rem; letter-spacing:.2em; text-transform:uppercase;
+  color:var(--brass); margin-bottom:1.5rem;
+}
+.footer-column ul { list-style:none }
+.footer-column li { margin-bottom:.75rem }
+.footer-column a { color:var(--mist); text-decoration:none; font-size:.9rem; transition:color .3s }
+.footer-column a:hover { color:var(--cream) }
+.footer-column address { color:var(--mist); font-style:normal; font-size:.9rem; line-height:1.8 }
+.footer-bottom {
+  display:flex; justify-content:space-between; align-items:center; padding-top:2rem;
+  font-size:.7rem; letter-spacing:.1em; color:var(--mist);
+}
+
+/* ═══════════════════════════════
+   SCROLL REVEAL
+═══════════════════════════════ */
+.reveal { opacity:0; transform:translateY(40px); transition:opacity .8s ease, transform .8s ease }
+.reveal.active { opacity:1; transform:translateY(0) }
+
+/* ═══════════════════════════════
+   RESPONSIVE
+═══════════════════════════════ */
+@media(max-width:1024px) {
+  .editorial-row.layout-1, .editorial-row.layout-3 { grid-template-columns:1fr }
+  .editorial-row.layout-2 { grid-template-columns:1fr 1fr }
+  .product-artifact.large { height:500px }
+  .footer-top { grid-template-columns:1fr 1fr }
+}
+@media(max-width:768px) {
+  .nav { padding:1rem 1.5rem }
+  .nav-links { display:none }
+  .page-header { padding:10rem 1.5rem 4rem }
+  .page-header-content { flex-direction:column; align-items:flex-start; gap:2rem }
+  .page-header-stats { text-align:left }
+  .filter-bar { padding:1.5rem; overflow-x:auto }
+  .filter-wrapper { flex-direction:column; gap:1rem; align-items:flex-start }
+  .filter-categories { flex-wrap:nowrap; overflow-x:auto; width:100%; padding-bottom:.5rem }
+  .filter-btn { flex:0 0 auto }
+  .section-products { padding:2rem 1.5rem 6rem }
+  .editorial-row.layout-1,.editorial-row.layout-2,.editorial-row.layout-3,.editorial-row.layout-4 { grid-template-columns:1fr }
+  .product-artifact.large, .product-artifact.medium { height:450px }
+  .quote-block { padding:2rem }
+  .quote-text { font-size:1.25rem }
+  .footer { padding:4rem 1.5rem 2rem }
+  .footer-top { grid-template-columns:1fr; gap:2rem }
+  .footer-bottom { flex-direction:column; gap:1rem; text-align:center }
+}
+</style>
+</head>
+<body>
+
+<div id="cur"></div>
+<div id="bar"></div>
+
+<!-- NAV -->
+<nav class="nav">
+  <a href="index.html" class="nav-logo">Sky<span>labs</span> Audio</a>
+  <ul class="nav-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="products.html" class="active">Products</a></li>
+    <li><a href="product.html">Featured</a></li>
+    <li><a href="about.html">Our Story</a></li>
+  </ul>
+</nav>
+
+<!-- PAGE HEADER -->
+<header class="page-header">
+  <div class="page-header-content">
+    <div class="page-header-text">
+      <span class="page-tag">The Collection</span>
+      <h1 class="page-title">Enter the <em>Listening Room</em></h1>
+      <p class="page-description">Every piece in our collection is chosen with intention — artifacts of sonic excellence that transform how you experience music.</p>
+    </div>
+    <div class="page-header-stats">
+      <div class="stat-number">85+</div>
+      <div class="stat-label">Years of Heritage</div>
+    </div>
+  </div>
+</header>
+
+<!-- FILTER BAR -->
+<div class="filter-bar">
+  <div class="filter-wrapper">
+    <div class="filter-categories">
+      <button class="filter-btn active">All</button>
+      <button class="filter-btn">Speakers</button>
+      <button class="filter-btn">Amplifiers</button>
+      <button class="filter-btn">Turntables</button>
+      <button class="filter-btn">DAC &amp; Streamers</button>
+      <button class="filter-btn">Accessories</button>
+    </div>
+    <div class="filter-view">
+      <button class="view-btn active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+          <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
+        </svg>
+      </button>
+      <button class="view-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/>
+          <line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- PRODUCTS -->
+<section class="section-products">
+  <div class="products-editorial">
+
+    <!-- ROW 1: Large + Medium -->
+    <div class="editorial-row layout-1">
+      <a href="product.html" class="product-artifact large reveal">
+        <div class="artifact-image">
+          <img src="https://skylabsaudio.com/cdn/shop/files/Wharfedale-Super-Linton-Hero-1.jpg?v=1762457959&width=1946" alt="Wharfedale Super Linton"
+               onerror="this.src='https://images.unsplash.com/photo-1610041321420-a596dd14ebc9?w=1400&q=80'">
+        </div>
+        <div class="art-glow"></div>
+        <span class="artifact-number">001</span>
+        <span class="artifact-badge">Heritage</span>
+        <div class="artifact-content">
+          <span class="artifact-brand">Wharfedale</span>
+          <h3 class="artifact-name">Super Linton with Stands</h3>
+          <p class="artifact-description">Floorstanding speakers that honour 85 years of British acoustic excellence. Warm, musical, and deeply engaging.</p>
+          <div class="artifact-footer">
+            <span class="artifact-price">$2,999</span>
+            <span class="artifact-link">Explore <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span>
+          </div>
+        </div>
+      </a>
+      <a href="product.html" class="product-artifact medium reveal">
+        <div class="artifact-image">
+          <img src="https://skylabsaudio.com/cdn/shop/files/LUXMAN-L-509Z-Integrated-Amp-SQ-1.jpg?v=1751488884&width=1946" alt="Luxman L-509Z"
+               onerror="this.src='https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=900&q=80'">
+        </div>
+        <div class="art-glow"></div>
+        <span class="artifact-number">002</span>
+        <span class="artifact-badge">Premium</span>
+        <div class="artifact-content">
+          <span class="artifact-brand">Luxman</span>
+          <h3 class="artifact-name">L-509Z Integrated Amplifier</h3>
+          <p class="artifact-description">Hand-built in Japan. 120W of pure, uncoloured sound.</p>
+          <div class="artifact-footer">
+            <span class="artifact-price">$14,495</span>
+            <span class="artifact-link">Explore <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span>
+          </div>
+        </div>
+      </a>
+    </div>
+
+    <!-- QUOTE BLOCK -->
+    <div class="quote-block reveal">
+      <p class="quote-text">Music deserves more than just playback. It deserves resurrection — bringing the energy and nuance of a live performance into your listening room.</p>
+      <p class="quote-author">— Kevin Moll, Founder · Skylabs Audio</p>
+    </div>
+
+    <!-- ROW 2: Three Equal -->
+    <div class="editorial-row layout-2">
+      <a href="product.html" class="product-artifact medium reveal">
+        <div class="artifact-image">
+          <img src="https://skylabsaudio.com/cdn/shop/files/Rega-Planar-1-Turntable-1.jpg?v=1743628311&width=1946" alt="Rega Planar 1"
+               onerror="this.src='https://images.unsplash.com/photo-1545293527-e26058c5b48b?w=900&q=80'">
+        </div>
+        <div class="art-glow"></div>
+        <span class="artifact-number">003</span>
+        <div class="artifact-content">
+          <span class="artifact-brand">Rega</span>
+          <h3 class="artifact-name">Planar 1 Turntable</h3>
+          <div class="artifact-footer">
+            <span class="artifact-price">$595</span>
+            <span class="artifact-link">Explore <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span>
+          </div>
+        </div>
+      </a>
+      <a href="product.html" class="product-artifact medium reveal">
+        <div class="artifact-image">
+          <img src="https://skylabsaudio.com/cdn/shop/files/DAC-Z10Front.jpg?v=1770925048&width=533" alt="Eversolo DAC-Z10"
+               onerror="this.src='https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=900&q=80'">
+        </div>
+        <div class="art-glow"></div>
+        <span class="artifact-number">004</span>
+        <span class="artifact-badge">New</span>
+        <div class="artifact-content">
+          <span class="artifact-brand">Eversolo</span>
+          <h3 class="artifact-name">DAC-Z10 High-Resolution DAC</h3>
+          <div class="artifact-footer">
+            <span class="artifact-price">$1,980</span>
+            <span class="artifact-link">Explore <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span>
+          </div>
+        </div>
+      </a>
+      <a href="product.html" class="product-artifact medium reveal">
+        <div class="artifact-image">
+          <img src="https://skylabsaudio.com/cdn/shop/files/L509Z_meter_release.jpg?v=1751488884&width=1946" alt="Luxman L-505Z"
+               onerror="this.src='https://images.unsplash.com/photo-1605101100278-5d1deb2b6498?w=900&q=80'">
+        </div>
+        <div class="art-glow"></div>
+        <span class="artifact-number">005</span>
+        <div class="artifact-content">
+          <span class="artifact-brand">Luxman</span>
+          <h3 class="artifact-name">L-505Z Integrated Amplifier</h3>
+          <div class="artifact-footer">
+            <span class="artifact-price">$6,995</span>
+            <span class="artifact-link">Explore <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span>
+          </div>
+        </div>
+      </a>
+    </div>
+
+    <!-- SECTION DIVIDER -->
+    <div class="section-divider reveal">
+      <div class="divider-line"></div>
+      <span class="divider-text">Heritage Collection</span>
+      <div class="divider-line"></div>
+    </div>
+
+    <!-- ROW 3: Small + Large -->
+    <div class="editorial-row layout-3">
+      <a href="product.html" class="product-artifact medium reveal">
+        <div class="artifact-image">
+          <img src="https://skylabsaudio.com/cdn/shop/files/Wharfedale-Super-Linton-Mahogany-Pair.jpg?v=1762457959&width=1946" alt="Wharfedale Super Linton Mahogany"
+               onerror="this.src='https://images.unsplash.com/photo-1547394765-185e1e68f34e?w=900&q=80'">
+        </div>
+        <div class="art-glow"></div>
+        <span class="artifact-number">006</span>
+        <div class="artifact-content">
+          <span class="artifact-brand">Wharfedale</span>
+          <h3 class="artifact-name">Super Linton — Mahogany</h3>
+          <div class="artifact-footer">
+            <span class="artifact-price">$2,999</span>
+            <span class="artifact-link">Explore <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span>
+          </div>
+        </div>
+      </a>
+      <a href="product.html" class="product-artifact large reveal">
+        <div class="artifact-image">
+          <img src="https://skylabsaudio.com/cdn/shop/files/Wharfedale-Super-Linton-Walnut-Pair.jpg?v=1762457959&width=1946" alt="Wharfedale Super Linton Walnut"
+               onerror="this.src='https://images.unsplash.com/photo-1610041321420-a596dd14ebc9?w=1400&q=80'">
+        </div>
+        <div class="art-glow"></div>
+        <span class="artifact-number">007</span>
+        <span class="artifact-badge">Heritage</span>
+        <div class="artifact-content">
+          <span class="artifact-brand">Wharfedale</span>
+          <h3 class="artifact-name">Super Linton — Walnut</h3>
+          <p class="artifact-description">Classic walnut finish paired with contemporary acoustic engineering for today's discerning audiophiles.</p>
+          <div class="artifact-footer">
+            <span class="artifact-price">$2,999</span>
+            <span class="artifact-link">Explore <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span>
+          </div>
+        </div>
+      </a>
+    </div>
+
+    <!-- FILM STRIP -->
+    <div class="film-strip">
+      <a href="product.html" class="film-frame product-artifact film reveal">
+        <div class="artifact-image">
+          <img src="https://skylabsaudio.com/cdn/shop/files/Rega-Planar-1-Turntable-4.jpg?v=1743628343&width=1946" alt="Rega Planar 1"
+               onerror="this.src='https://images.unsplash.com/photo-1545293527-e26058c5b48b?w=600&q=80'">
+        </div>
+        <div class="art-glow"></div>
+        <div class="artifact-content">
+          <span class="artifact-brand">Rega</span>
+          <h3 class="artifact-name" style="font-size:1.1rem">Planar 1</h3>
+          <span class="artifact-price">$595</span>
+        </div>
+      </a>
+      <a href="product.html" class="film-frame product-artifact film reveal">
+        <div class="artifact-image">
+          <img src="https://skylabsaudio.com/cdn/shop/files/L509Z_tone_release.jpg?v=1751488884&width=1946" alt="Luxman Controls"
+               onerror="this.src='https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&q=80'">
+        </div>
+        <div class="art-glow"></div>
+        <div class="artifact-content">
+          <span class="artifact-brand">Luxman</span>
+          <h3 class="artifact-name" style="font-size:1.1rem">L-509Z Detail</h3>
+          <span class="artifact-price">$14,495</span>
+        </div>
+      </a>
+      <a href="product.html" class="film-frame product-artifact film reveal">
+        <div class="artifact-image">
+          <img src="https://skylabsaudio.com/cdn/shop/files/Wharfedale-Super-Linton-Bass-Unit.jpg?v=1738948468&width=1946" alt="Wharfedale Bass Unit"
+               onerror="this.src='https://images.unsplash.com/photo-1547394765-185e1e68f34e?w=600&q=80'">
+        </div>
+        <div class="art-glow"></div>
+        <div class="artifact-content">
+          <span class="artifact-brand">Wharfedale</span>
+          <h3 class="artifact-name" style="font-size:1.1rem">Driver Detail</h3>
+          <span class="artifact-price">$2,999</span>
+        </div>
+      </a>
+      <a href="product.html" class="film-frame product-artifact film reveal">
+        <div class="artifact-image">
+          <img src="https://skylabsaudio.com/cdn/shop/files/L509Z_speaker_release.jpg?v=1751488884&width=1946" alt="Luxman Speaker Terminals"
+               onerror="this.src='https://images.unsplash.com/photo-1571330735066-03aaa9429d89?w=600&q=80'">
+        </div>
+        <div class="art-glow"></div>
+        <div class="artifact-content">
+          <span class="artifact-brand">Luxman</span>
+          <h3 class="artifact-name" style="font-size:1.1rem">Connectivity</h3>
+          <span class="artifact-price">$14,495</span>
+        </div>
+      </a>
+      <a href="product.html" class="film-frame product-artifact film reveal">
+        <div class="artifact-image">
+          <img src="https://skylabsaudio.com/cdn/shop/files/Wharfedale-Super-Linton-High-Frequency-Unit.jpg?v=1738948468&width=1946" alt="Wharfedale HF Unit"
+               onerror="this.src='https://images.unsplash.com/photo-1610041321420-a596dd14ebc9?w=600&q=80'">
+        </div>
+        <div class="art-glow"></div>
+        <div class="artifact-content">
+          <span class="artifact-brand">Wharfedale</span>
+          <h3 class="artifact-name" style="font-size:1.1rem">HF Driver</h3>
+          <span class="artifact-price">$2,999</span>
+        </div>
+      </a>
+    </div>
+
+    <!-- ROW 4: Two Equal Large -->
+    <div class="editorial-row layout-4">
+      <a href="product.html" class="product-artifact large reveal">
+        <div class="artifact-image">
+          <img src="https://skylabsaudio.com/cdn/shop/files/L509Z_front_release.jpg?v=1751488884&width=1946" alt="Luxman L-509Z Front"
+               onerror="this.src='https://images.unsplash.com/photo-1605101100278-5d1deb2b6498?w=1200&q=80'">
+        </div>
+        <div class="art-glow"></div>
+        <span class="artifact-number">008</span>
+        <span class="artifact-badge">Japan</span>
+        <div class="artifact-content">
+          <span class="artifact-brand">Luxman</span>
+          <h3 class="artifact-name">L-509Z — The Flagship</h3>
+          <p class="artifact-description">Those iconic illuminated VU meters aren't just for show — they're a window into the soul of your music.</p>
+          <div class="artifact-footer">
+            <span class="artifact-price">$14,495</span>
+            <span class="artifact-link">Explore <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span>
+          </div>
+        </div>
+      </a>
+      <a href="product.html" class="product-artifact large reveal">
+        <div class="artifact-image">
+          <img src="https://skylabsaudio.com/cdn/shop/files/Rega-Planar-1-Turntable-6.jpg?v=1743628343&width=1946" alt="Rega Planar 1 Detail"
+               onerror="this.src='https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=1200&q=80'">
+        </div>
+        <div class="art-glow"></div>
+        <span class="artifact-number">009</span>
+        <span class="artifact-badge">England</span>
+        <div class="artifact-content">
+          <span class="artifact-brand">Rega</span>
+          <h3 class="artifact-name">Planar 1 — Award Winner</h3>
+          <p class="artifact-description">Multi-award winning 'Plug and Play' turntable. Handmade RB110 tonearm. Set up in under 30 seconds.</p>
+          <div class="artifact-footer">
+            <span class="artifact-price">$595</span>
+            <span class="artifact-link">Explore <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span>
+          </div>
+        </div>
+      </a>
+    </div>
+
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="footer-wrapper">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <div class="footer-logo">Sky<span>labs</span> Audio</div>
+        <p class="footer-tagline">Experience the golden era of Hi-Fi. Curating exceptional vintage and modern audio equipment since 2016.</p>
+      </div>
+      <div class="footer-column">
+        <h4>Shop</h4>
+        <ul>
+          <li><a href="products.html">All Products</a></li>
+          <li><a href="products.html">Speakers</a></li>
+          <li><a href="products.html">Amplifiers</a></li>
+          <li><a href="products.html">Turntables</a></li>
+        </ul>
+      </div>
+      <div class="footer-column">
+        <h4>Company</h4>
+        <ul>
+          <li><a href="about.html">Our Story</a></li>
+          <li><a href="https://www.youtube.com/@skylabsaudio" target="_blank">YouTube</a></li>
+          <li><a href="https://discord.com/invite/hsdG5vgDvE" target="_blank">Discord</a></li>
+          <li><a href="mailto:skylabscontact@gmail.com">Contact</a></li>
+        </ul>
+      </div>
+      <div class="footer-column">
+        <h4>Visit Us</h4>
+        <address>
+          Valley Junction<br>
+          West Des Moines, Iowa<br><br>
+          Wed–Fri: 10am–5pm<br>
+          Saturday: 10am–3pm
+        </address>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 Skylabs Audio. All rights reserved.</span>
+      <span>Designed with passion for audio</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+/* CURSOR */
+const cur = document.getElementById('cur');
+let cx=0,cy=0,tx=0,ty=0;
+const isTouch = ()=>window.matchMedia('(pointer:coarse)').matches;
+document.addEventListener('mousemove',e=>{tx=e.clientX;ty=e.clientY});
+(function tick(){cx+=(tx-cx)*.1;cy+=(ty-cy)*.1;cur.style.left=cx+'px';cur.style.top=cy+'px';requestAnimationFrame(tick)})();
+if(isTouch()){cur.style.display='none'}else{
+  document.querySelectorAll('.product-artifact,a').forEach(el=>{
+    el.addEventListener('mouseenter',()=>{cur.classList.remove('pill');cur.classList.add('hover')});
+    el.addEventListener('mouseleave',()=>cur.classList.remove('hover'));
+  });
+  document.querySelectorAll('.filter-btn,.view-btn').forEach(el=>{
+    el.addEventListener('mouseenter',()=>{cur.classList.remove('hover');cur.classList.add('pill')});
+    el.addEventListener('mouseleave',()=>cur.classList.remove('pill'));
+  });
+}
+
+/* PROGRESS BAR */
+window.addEventListener('scroll',()=>{
+  document.getElementById('bar').style.width=(window.scrollY/(document.body.scrollHeight-window.innerHeight)*100)+'%';
+},{passive:true});
+
+/* SCROLL REVEAL */
+const reveals = document.querySelectorAll('.reveal');
+const revealOnScroll = ()=>{
+  reveals.forEach(el=>{
+    if(el.getBoundingClientRect().top < window.innerHeight - 150) el.classList.add('active');
+  });
+};
+window.addEventListener('scroll', revealOnScroll, {passive:true});
+revealOnScroll();
+
+/* FILTER BUTTONS */
+document.querySelectorAll('.filter-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+  });
+});
+
+/* VIEW TOGGLE */
+document.querySelectorAll('.view-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.view-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+  });
+});
+</script>
+</body>
+</html>

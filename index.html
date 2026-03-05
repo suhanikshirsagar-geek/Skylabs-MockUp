@@ -1,0 +1,1499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Skylabs Audio — Sound Is Everything</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,700;1,300;1,400;1,700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-dark: #12080d;
+    --bg-mid: #1a0d14;
+    --burgundy: #5c1520;
+    --green: #1a3326;
+    --brass: #2baccc;
+    --brass-dim: #53c2f6;
+    --cream: #f0e8d8;
+    --mist: #c8bfb0;
+    --charcoal: #1a1a1a;
+    --font-display: 'Cormorant Garamond', serif;
+    --font-mono: 'Space Mono', monospace;
+  }
+
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg-dark);
+    color: var(--cream);
+    font-family: var(--font-mono);
+    overflow-x: hidden;
+    cursor: none;
+  }
+
+  /* GRAIN OVERLAY */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
+    opacity: 0.045;
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* CUSTOM CURSOR */
+  #cursor {
+    position: fixed;
+    width: 10px; height: 10px;
+    background: var(--brass);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 99999; 
+    transform: translate(-50%, -50%);
+    transition: width 0.3s ease, height 0.3s ease, opacity 0.3s ease;
+    mix-blend-mode: screen;
+  }
+  #cursor.expanded { width: 44px; height: 44px; opacity: 0.6; }
+
+  /* NAVIGATION */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 1000;
+    padding: 24px 48px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transform: translateY(-100%);
+    transition: transform 0.6s cubic-bezier(0.76, 0, 0.24, 1);
+    background: linear-gradient(to bottom, rgba(18,8,13,0.95) 0%, transparent 100%);
+  }
+  nav.visible { transform: translateY(0); }
+
+  .nav-logo {
+    font-family: var(--font-display);
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    color: var(--cream);
+    text-decoration: none;
+  }
+  .nav-logo span { color: var(--brass); }
+
+  .nav-links {
+    display: flex;
+    gap: 40px;
+    list-style: none;
+  }
+  .nav-links a {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--mist);
+    text-decoration: none;
+    position: relative;
+    transition: color 0.3s;
+  }
+  .nav-links a::after {
+    content: '';
+    position: absolute;
+    bottom: -3px; left: 0;
+    width: 0; height: 1px;
+    background: var(--brass);
+    transition: width 0.3s ease;
+  }
+  .nav-links a:hover { color: var(--cream); }
+  .nav-links a:hover::after { width: 100%; }
+
+  /* HERO */
+  #hero {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  #hero-bg {
+    position: absolute;
+    inset: 0;
+    background: var(--bg-dark);
+  }
+
+  #hero-image {
+    position: absolute;
+    inset: 0;
+    /* local background image instead of remote store front */
+    /* background-image: url('images/herobanner.webp'); */
+    background-size: cover;
+    background-position: center;
+    opacity: 0;
+    transform: scale(1.04);
+    transition: opacity 1.2s ease, transform 12s ease;
+    filter: sepia(20%) contrast(1.08) saturate(0.85) brightness(0.6);
+  }
+  #hero-image.visible { opacity: 1; transform: scale(1.0); }
+
+  #hero-overlay {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at center, transparent 30%, rgba(18,8,13,0.7) 100%);
+  }
+
+  /* WAVEFORM CANVAS */
+  #waveform-canvas {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 10;
+  }
+
+  /* HERO TEXT */
+  #hero-content {
+    position: relative;
+    z-index: 20;
+    text-align: center;
+    opacity: 0;
+  }
+  #hero-content.visible { opacity: 1; }
+
+  .hero-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--brass);
+    margin-bottom: 20px;
+    display: block;
+  }
+
+  .hero-title {
+    font-family: var(--font-display);
+    font-size: clamp(60px, 11vw, 160px);
+    font-weight: 300;
+    line-height: 0.9;
+    letter-spacing: -0.02em;
+  }
+
+  .hero-title .char {
+    display: inline-block;
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+
+  .hero-tagline {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: clamp(16px, 2vw, 26px);
+    color: var(--mist);
+    margin-top: 24px;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.8s ease 0.5s, transform 0.8s ease 0.5s;
+  }
+  .hero-tagline.visible { opacity: 1; transform: translateY(0); }
+
+  .hero-scroll-hint {
+    position: absolute;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    opacity: 0;
+    transition: opacity 1s ease 3s;
+  }
+  .hero-scroll-hint.visible { opacity: 1; }
+  .hero-scroll-hint span {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--brass);
+  }
+  .scroll-line {
+    width: 1px;
+    height: 40px;
+    background: var(--brass);
+    animation: scrollPulse 2s ease-in-out infinite;
+  }
+  @keyframes scrollPulse {
+    0%, 100% { transform: scaleY(1); opacity: 1; }
+    50% { transform: scaleY(0.5); opacity: 0.4; }
+  }
+
+  /* BRASS SWEEP LINE */
+  .brass-sweep {
+    position: absolute;
+    bottom: 0; left: 0;
+    width: 100%;
+    height: 2px;
+    background: var(--brass);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.8s cubic-bezier(0.76, 0, 0.24, 1);
+    z-index: 30;
+  }
+  .brass-sweep.active { transform: scaleX(1); }
+
+  /* TICKER */
+  .ticker-wrap {
+    background: var(--brass);
+    padding: 12px 0;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+  .ticker-inner {
+    display: inline-flex;
+    animation: ticker 20s linear infinite;
+  }
+  .ticker-inner span {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    color: var(--bg-dark);
+    padding: 0 30px;
+  }
+  @keyframes ticker {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+
+  /* SECTIONS */
+  section { position: relative; overflow: hidden; }
+
+  .section-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--brass);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .section-label::before {
+    content: '';
+    width: 30px;
+    height: 1px;
+    background: var(--brass);
+  }
+
+  /* BRAND STATEMENT */
+  #brand-statement {
+    background: var(--green);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    padding: 120px 80px;
+  }
+
+  .statement-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    align-items: center;
+  }
+
+  .statement-text h2 {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: clamp(48px, 7vw, 100px);
+    font-weight: 300;
+    line-height: 1.0;
+    color: var(--cream);
+    margin-bottom: 32px;
+  }
+  .statement-text p {
+    font-size: 13px;
+    line-height: 1.8;
+    color: var(--mist);
+    max-width: 420px;
+  }
+
+  .statement-image {
+    position: relative;
+    height: 600px;
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .statement-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: sepia(20%) contrast(1.08) saturate(0.85) brightness(0.9);
+    transition: transform 8s ease;
+  }
+  .statement-image:hover img { transform: scale(1.04); }
+
+  /* FEATURED PRODUCTS — HORIZONTAL TAPE SCRUB */
+  #featured {
+    background: var(--bg-dark);
+    padding: 80px 0;
+  }
+
+  .featured-header {
+    padding: 0 80px;
+    margin-bottom: 48px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+
+  .featured-header h2 {
+    font-family: var(--font-display);
+    font-size: clamp(36px, 5vw, 64px);
+    font-weight: 300;
+  }
+
+  .featured-header a {
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--brass);
+    text-decoration: none;
+    border-bottom: 1px solid var(--brass);
+    padding-bottom: 4px;
+  }
+
+  .tape-scroll {
+    display: flex;
+    gap: 24px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    padding: 0 80px 40px;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .tape-scroll::-webkit-scrollbar { display: none; }
+
+  .tape-card {
+    flex: 0 0 78vw;
+    scroll-snap-align: start;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    background: var(--burgundy);
+    border-radius: 2px;
+    overflow: hidden;
+    position: relative;
+    min-height: 480px;
+  }
+
+  .tape-card:nth-child(even) { direction: rtl; }
+  .tape-card:nth-child(even) > * { direction: ltr; }
+
+  .tape-card-image {
+    position: relative;
+    overflow: hidden;
+  }
+  .tape-card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: sepia(20%) contrast(1.08) saturate(0.85);
+    transition: transform 0.8s ease;
+  }
+  .tape-card:hover .tape-card-image img { transform: scale(1.04); }
+
+  .tape-card-info {
+    padding: 60px 48px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    background: var(--burgundy);
+  }
+
+  .tape-card-brand {
+    font-size: 10px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--brass);
+    margin-bottom: 16px;
+  }
+
+  .tape-card-name {
+    font-family: var(--font-display);
+    font-size: clamp(28px, 4vw, 56px);
+    font-weight: 300;
+    line-height: 1.1;
+    margin-bottom: 20px;
+  }
+
+  .tape-card-desc {
+    font-size: 12px;
+    line-height: 1.8;
+    color: var(--mist);
+    margin-bottom: 32px;
+    max-width: 320px;
+  }
+
+  .tape-card-price {
+    font-size: 22px;
+    color: var(--brass);
+    margin-bottom: 28px;
+  }
+
+  .btn-explore {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--cream);
+    text-decoration: none;
+    border: 1px solid rgba(196,154,46,0.4);
+    padding: 14px 28px;
+    position: relative;
+    overflow: hidden;
+    transition: color 0.4s ease;
+    width: fit-content;
+  }
+  .btn-explore::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--brass);
+    transform: translateY(100%);
+    transition: transform 0.35s cubic-bezier(0.76, 0, 0.24, 1);
+    z-index: -1;
+  }
+  .btn-explore:hover { color: var(--bg-dark); border-color: var(--brass); }
+  .btn-explore:hover::after { transform: translateY(0); }
+
+  /* YOUTUBE / TV SECTION */
+  #youtube-section {
+    background: var(--bg-mid);
+    padding: 120px 80px;
+  }
+
+  .youtube-header {
+    text-align: center;
+    margin-bottom: 80px;
+  }
+  .youtube-header h2 {
+    font-family: var(--font-display);
+    font-size: clamp(36px, 5vw, 64px);
+    font-weight: 300;
+    font-style: italic;
+  }
+
+  .tv-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 60px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .tv-frame {
+    position: relative;
+    cursor: pointer;
+  }
+
+  .tv-body {
+    background: var(--green);
+    border-radius: 20px 20px 8px 8px;
+    padding: 20px 24px 30px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6), inset 0 1px 0 rgba(196,154,46,0.2);
+    transition: box-shadow 0.4s ease;
+    border: 2px solid rgba(196,154,46,0.15);
+  }
+  .tv-frame:hover .tv-body {
+    box-shadow: 0 20px 80px rgba(0,0,0,0.6), 0 0 60px rgba(196,154,46,0.25), inset 0 1px 0 rgba(196,154,46,0.3);
+    border-color: rgba(196,154,46,0.4);
+  }
+
+  .tv-antenna {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    margin-bottom: 10px;
+  }
+  .tv-antenna-rod {
+    width: 3px;
+    height: 40px;
+    background: var(--brass-dim);
+    transform-origin: bottom;
+  }
+  .tv-antenna-rod:first-child { transform: rotate(-20deg); }
+  .tv-antenna-rod:last-child { transform: rotate(20deg); }
+
+  .tv-screen {
+    position: relative;
+    aspect-ratio: 16/9;
+    background: #000;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 3px solid rgba(196,154,46,0.3);
+    box-shadow: inset 0 0 30px rgba(0,0,0,0.8);
+  }
+
+  .tv-screen iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    display: none;
+  }
+  .tv-screen iframe.playing { display: block; }
+
+  .tv-thumbnail {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+    filter: sepia(30%) saturate(0.8) brightness(0.7);
+    transition: filter 0.3s ease;
+  }
+  .tv-frame:hover .tv-thumbnail { filter: sepia(10%) saturate(0.9) brightness(0.85); }
+
+  .tv-play-btn {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 64px; height: 64px;
+    background: var(--brass);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.3s ease, background 0.3s ease;
+    border: none;
+    cursor: pointer;
+  }
+  .tv-play-btn::after {
+    content: '';
+    border-left: 22px solid var(--bg-dark);
+    border-top: 13px solid transparent;
+    border-bottom: 13px solid transparent;
+    margin-left: 5px;
+  }
+  .tv-frame:hover .tv-play-btn { transform: translate(-50%, -50%) scale(1.12); background: #d4a830; }
+
+  .tv-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 4px 0;
+  }
+  .tv-channel {
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    color: var(--brass);
+    text-transform: uppercase;
+  }
+  .tv-knobs {
+    display: flex;
+    gap: 8px;
+  }
+  .tv-knob {
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    background: var(--brass-dim);
+    border: 1px solid rgba(196,154,46,0.3);
+  }
+
+  .tv-title {
+    text-align: center;
+    margin-top: 16px;
+    font-size: 12px;
+    color: var(--mist);
+    font-style: italic;
+  }
+
+  /* CATEGORIES */
+  #categories {
+    background: var(--bg-dark);
+    padding: 120px 80px;
+  }
+
+  .categories-header {
+    margin-bottom: 60px;
+  }
+  .categories-header h2 {
+    font-family: var(--font-display);
+    font-size: clamp(36px, 5vw, 64px);
+    font-weight: 300;
+  }
+
+  .cat-grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    grid-template-rows: 300px 300px;
+    gap: 12px;
+  }
+
+  .cat-item {
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    background: var(--burgundy);
+  }
+  .cat-item:nth-child(1) { grid-column: 1 / 6; grid-row: 1 / 3; }
+  .cat-item:nth-child(2) { grid-column: 6 / 9; grid-row: 1 / 2; }
+  .cat-item:nth-child(3) { grid-column: 9 / 13; grid-row: 1 / 2; }
+  .cat-item:nth-child(4) { grid-column: 6 / 10; grid-row: 2 / 3; }
+  .cat-item:nth-child(5) { grid-column: 10 / 13; grid-row: 2 / 3; }
+
+  .cat-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: sepia(20%) contrast(1.05) saturate(0.85) brightness(0.7);
+    transition: transform 0.8s ease, filter 0.4s ease;
+  }
+  .cat-item:hover img {
+    transform: scale(1.06);
+    filter: sepia(10%) contrast(1.05) saturate(0.9) brightness(0.85);
+  }
+
+  .cat-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(18,8,13,0.8) 0%, transparent 60%);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 28px;
+  }
+
+  .cat-bar {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 0;
+    background: var(--brass);
+    transition: height 0.3s ease;
+    display: flex;
+    align-items: center;
+    padding: 0 28px;
+    overflow: hidden;
+  }
+  .cat-item:hover .cat-bar {
+    height: 48px;
+  }
+  .cat-bar span {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--bg-dark);
+    white-space: nowrap;
+  }
+
+  .cat-name {
+    font-family: var(--font-display);
+    font-size: clamp(20px, 3vw, 36px);
+    font-weight: 300;
+    transition: transform 0.3s ease;
+  }
+  .cat-item:hover .cat-name { transform: translateY(-20px); }
+
+  .cat-count {
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    color: var(--brass);
+    margin-top: 4px;
+  }
+
+  /* MANIFESTO */
+  #manifesto {
+    background: var(--burgundy);
+    padding: 140px 80px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  #manifesto::before {
+    content: '"';
+    position: absolute;
+    top: -60px; left: 80px;
+    font-family: var(--font-display);
+    font-size: 400px;
+    color: rgba(196,154,46,0.06);
+    line-height: 1;
+    pointer-events: none;
+  }
+
+  .manifesto-text {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: clamp(28px, 4.5vw, 64px);
+    font-weight: 300;
+    line-height: 1.3;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  .manifesto-text .word {
+    display: inline-block;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+  }
+  .manifesto-text .word.visible { opacity: 1; transform: translateY(0); }
+
+  /* PROGRESS BAR */
+  #progress-bar {
+    position: fixed;
+    right: 0; top: 0;
+    width: 2px;
+    height: 0%;
+    background: var(--brass);
+    z-index: 1000;
+    transition: height 0.1s linear;
+  }
+
+  /* FOOTER */
+  footer {
+    background: var(--bg-dark);
+    border-top: 1px solid rgba(196,154,46,0.2);
+    padding: 60px 80px 40px;
+  }
+
+  .footer-inner {
+    display: grid;
+    grid-template-columns: 1fr 2fr 1fr;
+    gap: 60px;
+    margin-bottom: 48px;
+  }
+
+  .footer-brand h3 {
+    font-family: var(--font-display);
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 12px;
+  }
+  .footer-brand h3 span { color: var(--brass); }
+  .footer-brand p {
+    font-size: 12px;
+    line-height: 1.8;
+    color: var(--mist);
+    max-width: 260px;
+  }
+
+  .footer-nav {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 32px;
+  }
+  .footer-nav-group h4 {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--brass);
+    margin-bottom: 16px;
+  }
+  .footer-nav-group a {
+    display: block;
+    font-size: 12px;
+    color: var(--mist);
+    text-decoration: none;
+    margin-bottom: 8px;
+    transition: color 0.2s;
+  }
+  .footer-nav-group a:hover { color: var(--cream); }
+
+  .footer-newsletter h4 {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--brass);
+    margin-bottom: 16px;
+  }
+  .footer-newsletter p {
+    font-size: 12px;
+    color: var(--mist);
+    line-height: 1.7;
+    margin-bottom: 20px;
+  }
+
+  .newsletter-form {
+    display: flex;
+    gap: 0;
+  }
+  .newsletter-form input {
+    flex: 1;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(196,154,46,0.2);
+    border-right: none;
+    padding: 12px 16px;
+    color: var(--cream);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    outline: none;
+  }
+  .newsletter-form input::placeholder { color: var(--mist); }
+  .newsletter-form input:focus { border-color: var(--brass); }
+  .newsletter-form button {
+    background: var(--brass);
+    border: none;
+    padding: 12px 20px;
+    color: var(--bg-dark);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .newsletter-form button:hover { background: #d4a830; }
+
+  .footer-bottom {
+    border-top: 1px solid rgba(255,255,255,0.06);
+    padding-top: 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .footer-bottom p {
+    font-size: 11px;
+    color: rgba(200,191,176,0.4);
+    letter-spacing: 0.05em;
+  }
+
+  .social-links {
+    display: flex;
+    gap: 20px;
+  }
+  .social-links a {
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--mist);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .social-links a:hover { color: var(--brass); }
+
+  /* SCROLL REVEAL */
+  .reveal {
+    opacity: 0;
+    transform: translateY(40px);
+    transition: opacity 0.8s ease, transform 0.8s ease;
+  }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+
+  .reveal-clip {
+    clip-path: inset(0 0 100% 0);
+    transition: clip-path 0.9s cubic-bezier(0.76, 0, 0.24, 1);
+  }
+  .reveal-clip.visible { clip-path: inset(0 0 0% 0); }
+
+  /* VINYL SPINNER */
+  .vinyl-bg {
+    position: absolute;
+    right: -120px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 500px;
+    height: 500px;
+    border-radius: 50%;
+    border: 1px solid rgba(196,154,46,0.05);
+    animation: spin 30s linear infinite;
+    pointer-events: none;
+  }
+  .vinyl-bg::before {
+    content: '';
+    position: absolute;
+    inset: 20px;
+    border-radius: 50%;
+    border: 1px solid rgba(196,154,46,0.05);
+  }
+  .vinyl-bg::after {
+    content: '';
+    position: absolute;
+    inset: 40%;
+    border-radius: 50%;
+    background: rgba(196,154,46,0.03);
+  }
+  @keyframes spin {
+    from { transform: translateY(-50%) rotate(0deg); }
+    to { transform: translateY(-50%) rotate(360deg); }
+  }
+
+  /* RESPONSIVE */
+  @media (max-width: 768px) {
+    nav { padding: 20px 24px; }
+    .nav-links { display: none; }
+
+    #brand-statement { padding: 80px 24px; }
+    .statement-inner { grid-template-columns: 1fr; gap: 40px; }
+    .statement-image { height: 300px; }
+
+    .featured-header { padding: 0 24px; }
+    .tape-scroll { padding: 0 24px 32px; }
+    .tape-card { flex: 0 0 92vw; grid-template-columns: 1fr; min-height: auto; }
+    .tape-card:nth-child(even) { direction: ltr; }
+    .tape-card-image { height: 260px; }
+    .tape-card-info { padding: 32px 28px; }
+
+    #youtube-section { padding: 80px 24px; }
+    .tv-grid { grid-template-columns: 1fr; gap: 40px; }
+
+    #categories { padding: 80px 24px; }
+    .cat-grid { grid-template-columns: 1fr 1fr; grid-template-rows: auto; }
+    .cat-item { grid-column: auto !important; grid-row: auto !important; height: 200px; }
+
+    #manifesto { padding: 80px 24px; }
+    footer { padding: 60px 24px 32px; }
+    .footer-inner { grid-template-columns: 1fr; gap: 40px; }
+    .footer-nav { grid-template-columns: 1fr 1fr; }
+    .footer-bottom { flex-direction: column; gap: 16px; text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<div id="cursor"></div>
+<div id="progress-bar"></div>
+
+<nav id="main-nav">
+  <a href="index.html" class="nav-logo">Sky<span>labs</span> Audio</a>
+  <ul class="nav-links">
+    <li><a href="products.html">Shop</a></li>
+    <li><a href="product.html">Featured</a></li>
+    <li><a href="about.html">Our Story</a></li>
+    <li><a href="#">Vinyl</a></li>
+    <li><a href="#">Contact</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div id="hero-bg"></div>
+  <div id="hero-image"></div>
+  <div id="hero-overlay"></div>
+  <canvas id="waveform-canvas"></canvas>
+
+  <div id="hero-content">
+    <span class="hero-label">West Des Moines, Iowa — Est. 2016</span>
+    <h1 class="hero-title" id="hero-title">SKYLABS<br>AUDIO</h1>
+    <p class="hero-tagline" id="hero-tagline">Sound is not background. It is everything.</p>
+  </div>
+
+  <div class="hero-scroll-hint" id="scroll-hint">
+    <span>Scroll</span>
+    <div class="scroll-line"></div>
+  </div>
+  <div class="brass-sweep" id="brass-sweep"></div>
+</section>
+
+<!-- TICKER -->
+<div class="ticker-wrap">
+  <div class="ticker-inner">
+    <span>TURNTABLES</span><span>·</span>
+    <span>AMPLIFIERS</span><span>·</span>
+    <span>SPEAKERS</span><span>·</span>
+    <span>HEADPHONES</span><span>·</span>
+    <span>DAC</span><span>·</span>
+    <span>VINYL RECORDS</span><span>·</span>
+    <span>CARTRIDGES</span><span>·</span>
+    <span>HI-FI FURNITURE</span><span>·</span>
+    <span>TURNTABLES</span><span>·</span>
+    <span>AMPLIFIERS</span><span>·</span>
+    <span>SPEAKERS</span><span>·</span>
+    <span>HEADPHONES</span><span>·</span>
+    <span>DAC</span><span>·</span>
+    <span>VINYL RECORDS</span><span>·</span>
+    <span>CARTRIDGES</span><span>·</span>
+    <span>HI-FI FURNITURE</span><span>·</span>
+  </div>
+</div>
+
+<!-- BRAND STATEMENT -->
+<section id="brand-statement">
+  <div class="vinyl-bg"></div>
+  <div class="statement-inner">
+    <div class="statement-text reveal">
+      <div class="section-label">Our Philosophy</div>
+      <h2>Where vintage<br>meets obsession.</h2>
+      <p>Kevin Moll opened Skylabs Audio in 2016 with one mission: to bring the golden era of hi-fi back to life. Located in the historic Valley Junction district of West Des Moines, we don't just sell equipment — we curate experiences. Every turntable, every amplifier, every speaker system is chosen because we'd put it in our own listening room.</p>
+    </div>
+    <div class="statement-image reveal" style="transition-delay: 0.2s">
+      <img src="https://cdn.shopify.com/s/files/1/0674/8937/8598/files/about_us_header.jpg?v=1680197704" alt="Skylabs Audio Store" onerror="this.src='https://images.unsplash.com/photo-1571330735066-03aaa9429d89?w=800&q=80'">
+    </div>
+  </div>
+</section>
+
+<!-- FEATURED PRODUCTS -->
+<section id="featured">
+  <div class="featured-header reveal">
+    <div>
+      <div class="section-label">Selected Works</div>
+      <h2>Featured Collection</h2>
+    </div>
+    <a href="products.html">View All →</a>
+  </div>
+
+  <div class="tape-scroll">
+    <div class="tape-card">
+      <div class="tape-card-image">
+        <img src="images/regaTurntable.webp" alt="Rega Planar 1 Plus">
+      </div>
+      <div class="tape-card-info">
+        <div class="tape-card-brand">Rega</div>
+        <h3 class="tape-card-name">Planar 1 Plus Turntable</h3>
+        <p class="tape-card-desc">The perfect entry point into serious analog playback. Hand-assembled in Southend-on-Sea, England, with a built-in phono stage that punches far above its class.</p>
+        <div class="tape-card-price">$595.00</div>
+        <a href="product.html" class="btn-explore">Explore →</a>
+      </div>
+    </div>
+
+    <div class="tape-card">
+      <div class="tape-card-image">
+        <img src="images/amplifier.webp" alt="Leak Stereo 130">
+      </div>
+      <div class="tape-card-info">
+        <div class="tape-card-brand">Leak Audio</div>
+        <h3 class="tape-card-name">Stereo 130<br>Integrated Amplifier</h3>
+        <p class="tape-card-desc">British hi-fi heritage reborn. 45 watts per channel of pure analog warmth, with built-in DAC and streaming. This is the amplifier your system has been waiting for.</p>
+        <div class="tape-card-price">$1,299.00</div>
+        <a href="product.html" class="btn-explore">Explore →</a>
+      </div>
+    </div>
+
+    <div class="tape-card">
+      <div class="tape-card-image">
+        <img src="images/Wharfedale-Super-Linton-Hero-1.webp" alt="Wharfedale Diamond 12.1">
+      </div>
+      <div class="tape-card-info">
+        <div class="tape-card-brand">Wharfedale</div>
+        <h3 class="tape-card-name">Diamond 12.1<br>Bookshelf Speakers</h3>
+        <p class="tape-card-desc">Seven decades of British speaker engineering distilled into a bookshelf cabinet. The Diamond 12.1 doesn't ask for much space. But it fills every inch of it with sound.</p>
+        <div class="tape-card-price">$349.00</div>
+        <a href="product.html" class="btn-explore">Explore →</a>
+      </div>
+    </div>
+
+    <div class="tape-card">
+      <div class="tape-card-image">
+        <img src="images/cartridges.webp" alt="Grado Gold3">
+      </div>
+      <div class="tape-card-info">
+        <div class="tape-card-brand">Grado</div>
+        <h3 class="tape-card-name">Prestige Gold3<br>Phono Cartridge</h3>
+        <p class="tape-card-desc">Handcrafted in Brooklyn since 1953. The Gold3 traces every groove with the precision of a surgeon and the sensitivity of a poet. Your records deserve nothing less.</p>
+        <div class="tape-card-price">$175.00</div>
+        <a href="product.html" class="btn-explore">Explore →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- YOUTUBE / TV SECTION -->
+<section id="youtube-section">
+  <div class="youtube-header reveal">
+    <div class="section-label" style="justify-content: center; margin-bottom: 16px;">From The Studio</div>
+    <h2>Watch & Learn with Kevin</h2>
+  </div>
+
+  <div class="tv-grid reveal" style="transition-delay: 0.2s">
+    <div class="tv-frame" onclick="playVideo(this, 'QEhPHi84rq4')">
+      <div class="tv-body">
+        <div class="tv-antenna">
+          <div class="tv-antenna-rod"></div>
+          <div class="tv-antenna-rod"></div>
+        </div>
+        <div class="tv-screen">
+          <div class="tv-thumbnail" style="background-image: url('https://i.ytimg.com/vi/ScJVujCoj4c/hqdefault.jpg?sqp=-oaymwEnCNACELwBSFryq4qpAxkIARUAAIhCGAHYAQHiAQoIGBACGAY4AUAB&rs=AOn4CLCtx98Gd2Z7l6H5lLgshLlJU_tXyQ')"></div>
+          <button class="tv-play-btn" aria-label="Play video"></button>
+          <iframe id="yt-QEhPHi84rq4" src="https://www.youtube.com/embed/QEhPHi84rq4" allowfullscreen allow="autoplay"></iframe>
+        </div>
+        <div class="tv-bottom">
+          <span class="tv-channel">CH 01 — SKYLABS AUDIO</span>
+          <div class="tv-knobs">
+            <div class="tv-knob"></div>
+            <div class="tv-knob"></div>
+            <div class="tv-knob"></div>
+          </div>
+        </div>
+      </div>
+      <p class="tv-title">Most Wanted Vintage Stereo Pieces Today</p>
+    </div>
+
+    <div class="tv-frame" onclick="playVideo(this, 'dE3RlLYhq6c')">
+      <div class="tv-body">
+        <div class="tv-antenna">
+          <div class="tv-antenna-rod"></div>
+          <div class="tv-antenna-rod"></div>
+        </div>
+        <div class="tv-screen">
+          <div class="tv-thumbnail" style="background-image: url('https://i.ytimg.com/vi/IkxWH95iMNg/hq720.jpg?sqp=-oaymwEcCNAFEJQDSFXyq4qpAw4IARUAAIhCGAFwAcABBg==&rs=AOn4CLCniMBTDqb-HtQzE4WQ6nr3PkccYA')"></div>
+          <button class="tv-play-btn" aria-label="Play video"></button>
+          <iframe id="yt-dE3RlLYhq6c" src="https://www.youtube.com/embed/videoseries?list=UUfkefBAR_BBXW_2z37-ozuw" allowfullscreen allow="autoplay"></iframe>
+        </div>
+        <div class="tv-bottom">
+          <span class="tv-channel">CH 02 — SKYLABS AUDIO</span>
+          <div class="tv-knobs">
+            <div class="tv-knob"></div>
+            <div class="tv-knob"></div>
+            <div class="tv-knob"></div>
+          </div>
+        </div>
+      </div>
+      <p class="tv-title">We Used To Love Them! What Changed?</p>
+    </div>
+  </div>
+</section>
+
+<!-- CATEGORIES -->
+<section id="categories">
+  <div class="categories-header reveal">
+    <div class="section-label">Shop By Category</div>
+    <h2>Find Your Sound</h2>
+  </div>
+
+  <div class="cat-grid">
+    <div class="cat-item reveal" style="transition-delay: 0s">
+      <img src="images/Audio-Technica-turntable.webp" alt="Turntables">
+      <div class="cat-overlay">
+        <h3 class="cat-name">Turntables</h3>
+        <span class="cat-count">12 Products</span>
+      </div>
+      <div class="cat-bar"><span>Shop Turntables →</span></div>
+    </div>
+    <div class="cat-item reveal" style="transition-delay: 0.1s">
+      <img src="images/amplifier.webp" alt="Amplifiers">
+      <div class="cat-overlay">
+        <h3 class="cat-name">Amplifiers</h3>
+        <span class="cat-count">18 Products</span>
+      </div>
+      <div class="cat-bar"><span>Shop Amplifiers →</span></div>
+    </div>
+    <div class="cat-item reveal" style="transition-delay: 0.15s">
+      <img src="images/Cambridge-Audio-Home.webp" alt="Speakers">
+      <div class="cat-overlay">
+        <h3 class="cat-name">Speakers</h3>
+        <span class="cat-count">24 Products</span>
+      </div>
+      <div class="cat-bar"><span>Shop Speakers →</span></div>
+    </div>
+    <div class="cat-item reveal" style="transition-delay: 0.2s">
+      <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&q=80" alt="Headphones">
+      <div class="cat-overlay">
+        <h3 class="cat-name">Headphones</h3>
+        <span class="cat-count">8 Products</span>
+      </div>
+      <div class="cat-bar"><span>Shop Headphones →</span></div>
+    </div>
+    <div class="cat-item reveal" style="transition-delay: 0.25s">
+      <img src="https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800&q=80" alt="Vinyl Records">
+      <div class="cat-overlay">
+        <h3 class="cat-name">Vinyl Records</h3>
+        <span class="cat-count">200+ Titles</span>
+      </div>
+      <div class="cat-bar"><span>Browse Records →</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- MANIFESTO -->
+<section id="manifesto">
+  <p class="manifesto-text" id="manifesto-text">
+    Every record has a story. Every system has a soul. We exist to connect the two.
+  </p>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <h3>Sky<span>labs</span> Audio</h3>
+      <p>The hi-fi experience from the golden era of audio. Valley Junction, West Des Moines, Iowa.</p>
+    </div>
+    <div class="footer-nav">
+      <div class="footer-nav-group">
+        <h4>Shop</h4>
+        <a href="products.html">All Products</a>
+        <a href="#">Turntables</a>
+        <a href="#">Amplifiers</a>
+        <a href="#">Speakers</a>
+        <a href="#">Vinyl Records</a>
+      </div>
+      <div class="footer-nav-group">
+        <h4>Brands</h4>
+        <a href="#">Rega</a>
+        <a href="#">Luxman</a>
+        <a href="#">Wharfedale</a>
+        <a href="#">Grado</a>
+        <a href="#">Leak Audio</a>
+      </div>
+      <div class="footer-nav-group">
+        <h4>Info</h4>
+        <a href="about.html">Our Story</a>
+        <a href="#">Services</a>
+        <a href="#">FAQ</a>
+        <a href="#">Trade Up</a>
+      </div>
+    </div>
+    <div class="footer-newsletter">
+      <h4>Stay Connected</h4>
+      <p>Weekly insights, new arrivals, and stories from the listening room.</p>
+      <div class="newsletter-form">
+        <input type="email" placeholder="your@email.com">
+        <button>Join</button>
+      </div>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>© 2024 Skylabs Audio. All rights reserved.</p>
+    <div class="social-links">
+      <a href="https://www.youtube.com/@skylabsaudio" target="_blank">YouTube</a>
+      <a href="https://www.instagram.com/skylabsiowa/" target="_blank">Instagram</a>
+      <a href="https://www.facebook.com/skylabsiowa" target="_blank">Facebook</a>
+      <a href="https://www.tiktok.com/@skylabsvintageaudio" target="_blank">TikTok</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ─── CUSTOM CURSOR ───────────────────────────────────────────────────────────
+const cursor = document.getElementById('cursor');
+let curX = 0, curY = 0, tarX = 0, tarY = 0;
+const isTouchDevice = () => window.matchMedia('(pointer: coarse)').matches;
+
+document.addEventListener('mousemove', e => { tarX = e.clientX; tarY = e.clientY; });
+
+function animateCursor() {
+  curX += (tarX - curX) * 0.12;
+  curY += (tarY - curY) * 0.12;
+  cursor.style.left = curX + 'px';
+  cursor.style.top = curY + 'px';
+  requestAnimationFrame(animateCursor);
+}
+if (!isTouchDevice()) {
+  animateCursor();
+  document.querySelectorAll('a, button, .cat-item, .tape-card, .tv-frame').forEach(el => {
+    el.addEventListener('mouseenter', () => cursor.classList.add('expanded'));
+    el.addEventListener('mouseleave', () => cursor.classList.remove('expanded'));
+  });
+} else {
+  cursor.style.display = 'none';
+}
+
+// ─── PROGRESS BAR ────────────────────────────────────────────────────────────
+const progressBar = document.getElementById('progress-bar');
+window.addEventListener('scroll', () => {
+  const pct = window.scrollY / (document.body.scrollHeight - window.innerHeight) * 100;
+  progressBar.style.height = pct + '%';
+});
+
+// ─── WAVEFORM HERO ANIMATION ─────────────────────────────────────────────────
+const canvas = document.getElementById('waveform-canvas');
+const ctx = canvas.getContext('2d');
+const BAR_COUNT = 90;
+const BAR_W = 3;
+const BAR_GAP = 5;
+const TOTAL_W = BAR_COUNT * (BAR_W + BAR_GAP);
+
+function resizeCanvas() {
+  canvas.width = Math.min(TOTAL_W, window.innerWidth * 0.9);
+  canvas.height = window.innerHeight * 0.5;
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+// Generate waveform heights (sine wave with randomness)
+let currentHeights = Array.from({length: BAR_COUNT}, (_, i) => {
+  const base = Math.sin((i / BAR_COUNT) * Math.PI * 4) * 0.4 + 0.5;
+  return (base + Math.random() * 0.3) * canvas.height * 0.6;
+});
+
+// Target silhouette heights (turntable silhouette-like profile)
+const silhouetteHeights = Array.from({length: BAR_COUNT}, (_, i) => {
+  const x = i / BAR_COUNT;
+  // Creates a shape resembling a turntable from the side
+  let h = 0.15;
+  if (x > 0.1 && x < 0.9) h = 0.35;
+  if (x > 0.25 && x < 0.75) h = 0.55;
+  if (x > 0.35 && x < 0.65) h = 0.7;
+  if (x > 0.45 && x < 0.55) h = 0.4; // center hole
+  return h * canvas.height * 0.8;
+});
+
+let phase = 'waveform'; // waveform → morphing → fading
+let morphProgress = 0;
+let fadeProgress = 0;
+let morphStartTime = null;
+let fadeStartTime = null;
+let drawProgress = 0;
+let animStartTime = null;
+
+function easeInOut(t) {
+  return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+}
+
+function drawBars(heights, alpha) {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const totalBarsW = BAR_COUNT * (BAR_W + BAR_GAP) - BAR_GAP;
+  const startX = (canvas.width - totalBarsW) / 2;
+  const centerY = canvas.height / 2;
+
+  ctx.globalAlpha = alpha;
+  ctx.fillStyle = '#2baccc';
+
+  for (let i = 0; i < BAR_COUNT; i++) {
+    if (i > drawProgress) break;
+    const x = startX + i * (BAR_W + BAR_GAP);
+    const h = heights[i];
+    ctx.fillRect(x, centerY - h / 2, BAR_W, h);
+  }
+  ctx.globalAlpha = 1;
+}
+
+function animateHero(ts) {
+  if (!animStartTime) animStartTime = ts;
+  const elapsed = ts - animStartTime;
+
+  // Phase 1: Draw bars left to right (0 - 1200ms)
+  if (phase === 'waveform') {
+    drawProgress = Math.min(BAR_COUNT, (elapsed / 1200) * BAR_COUNT);
+    drawBars(currentHeights, 1);
+    if (elapsed >= 1200) {
+      phase = 'morphing';
+      morphStartTime = ts;
+      drawProgress = BAR_COUNT;
+    }
+  }
+
+  // Phase 2: Morph waveform to silhouette (1200 - 2200ms)
+  else if (phase === 'morphing') {
+    morphProgress = Math.min(1, (ts - morphStartTime) / 1000);
+    const easedMorph = easeInOut(morphProgress);
+    const blended = currentHeights.map((h, i) => h + (silhouetteHeights[i] - h) * easedMorph);
+    drawBars(blended, 1);
+
+    if (morphProgress >= 1) {
+      phase = 'fading';
+      fadeStartTime = ts;
+      // Show hero image
+      const heroImg = document.getElementById('hero-image');
+      heroImg.classList.add('visible');
+    }
+  }
+
+  // Phase 3: Fade bars out (2200 - 2800ms)
+  else if (phase === 'fading') {
+    fadeProgress = Math.min(1, (ts - fadeStartTime) / 600);
+    drawBars(silhouetteHeights, 1 - fadeProgress);
+
+    if (fadeProgress >= 1) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      // Show hero content
+      const heroContent = document.getElementById('hero-content');
+      heroContent.classList.add('visible');
+      revealTitle();
+      document.getElementById('hero-tagline').classList.add('visible');
+      // Show nav and scroll hint after delay
+      setTimeout(() => {
+        document.getElementById('main-nav').classList.add('visible');
+        document.getElementById('scroll-hint').classList.add('visible');
+        document.getElementById('brass-sweep').classList.add('active');
+      }, 800);
+      return; // stop animation loop
+    }
+  }
+
+  requestAnimationFrame(animateHero);
+}
+
+requestAnimationFrame(animateHero);
+
+// ─── LETTER STAGGER ──────────────────────────────────────────────────────────
+function revealTitle() {
+  const title = document.getElementById('hero-title');
+  const html = title.innerHTML;
+  let newHtml = '';
+  let charIndex = 0;
+  for (let i = 0; i < html.length; i++) {
+    if (html[i] === '<') {
+      const end = html.indexOf('>', i);
+      newHtml += html.substring(i, end + 1);
+      i = end;
+    } else if (html[i] === ' ') {
+      newHtml += ' ';
+    } else {
+      newHtml += `<span class="char" style="--i:${charIndex}; transition-delay: ${charIndex * 60}ms">${html[i]}</span>`;
+      charIndex++;
+    }
+  }
+  title.innerHTML = newHtml;
+  requestAnimationFrame(() => {
+    title.querySelectorAll('.char').forEach(c => {
+      c.style.opacity = '1';
+      c.style.transform = 'translateY(0)';
+    });
+  });
+}
+
+// ─── SCROLL REVEALS ──────────────────────────────────────────────────────────
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+      observer.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.15 });
+
+document.querySelectorAll('.reveal, .reveal-clip').forEach(el => observer.observe(el));
+
+// ─── MANIFESTO WORD STAGGER ──────────────────────────────────────────────────
+const manifestoEl = document.getElementById('manifesto-text');
+const words = manifestoEl.textContent.trim().split(/\s+/);
+manifestoEl.innerHTML = words.map((w, i) =>
+  `<span class="word" style="transition-delay: ${i * 80}ms">${w}</span>`
+).join(' ');
+
+const maniObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.querySelectorAll('.word').forEach(w => w.classList.add('visible'));
+      maniObserver.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.4 });
+maniObserver.observe(manifestoEl);
+
+// ─── TV / YOUTUBE PLAY ───────────────────────────────────────────────────────
+function playVideo(tvFrame, videoId) {
+  const screen = tvFrame.querySelector('.tv-screen');
+  const thumbnail = screen.querySelector('.tv-thumbnail');
+  const playBtn = screen.querySelector('.tv-play-btn');
+  const iframe = screen.querySelector('iframe');
+
+  thumbnail.style.opacity = '0';
+  playBtn.style.opacity = '0';
+  // use template literal so videoId is interpolated
+  iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1`;
+  iframe.classList.add('playing');
+}
+
+// ─── PARALLAX (desktop only) ─────────────────────────────────────────────────
+if (!isTouchDevice()) {
+  let ticking = false;
+  window.addEventListener('scroll', () => {
+    if (!ticking) {
+      requestAnimationFrame(() => {
+        const scrollY = window.scrollY;
+        const heroImg = document.getElementById('hero-image');
+        heroImg.style.transform = `scale(1.0) translateY(${scrollY * 0.3}px)`;
+        ticking = false;
+      });
+      ticking = true;
+    }
+  });
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Our Story — Skylabs Audio</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,700;1,300;1,400;1,700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-dark: #12080d; --bg-mid: #1a0d14;
+    --burgundy: #5c1520; --green: #1a3326;
+    --brass: #2baccc; --brass-dim: #53c2f6;
+    --cream: #f0e8d8; --mist: #c8bfb0;
+    --font-display: 'Cormorant Garamond', serif;
+    --font-mono: 'Space Mono', monospace;
+  }
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { background: var(--bg-dark); color: var(--cream); font-family: var(--font-mono); overflow-x: hidden; cursor: none; }
+  body::before { content: ''; position: fixed; inset: 0; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E"); opacity: 0.045; pointer-events: none; z-index: 9999; }
+
+  #cursor { position: fixed; width: 10px; height: 10px; background: var(--brass); border-radius: 50%; pointer-events: none; z-index: 99999; transform: translate(-50%, -50%); transition: width 0.3s, height 0.3s, opacity 0.3s; mix-blend-mode: screen; }
+  #cursor.expanded { width: 44px; height: 44px; opacity: 0.6; }
+  #progress-bar { position: fixed; right: 0; top: 0; width: 2px; height: 0%; background: var(--brass); z-index: 1000; }
+
+  nav { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; padding: 24px 48px; display: flex; align-items: center; justify-content: space-between; background: linear-gradient(to bottom, rgba(18,8,13,0.95) 0%, transparent 100%); }
+  .nav-logo { font-family: var(--font-display); font-size: 22px; font-weight: 700; color: var(--cream); text-decoration: none; }
+  .nav-logo span { color: var(--brass); }
+  .nav-links { display: flex; gap: 40px; list-style: none; }
+  .nav-links a { font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--mist); text-decoration: none; position: relative; transition: color 0.3s; }
+  .nav-links a::after { content: ''; position: absolute; bottom: -3px; left: 0; width: 0; height: 1px; background: var(--brass); transition: width 0.3s; }
+  .nav-links a:hover { color: var(--cream); }
+  .nav-links a:hover::after, .nav-links a.active::after { width: 100%; }
+  .nav-links a.active { color: var(--cream); }
+
+  /* HERO */
+  .about-hero {
+    position: relative;
+    height: 100vh;
+    display: flex;
+    align-items: flex-end;
+    padding: 80px;
+    overflow: hidden;
+  }
+  .about-hero-img {
+    position: absolute;
+    inset: 0;
+    background-image: url('images/Midwest-Largest-Selection-Vintage-Stereos-and-Speakers.webp');
+    filter: sepia(25%) contrast(1.1) saturate(0.8) brightness(0.55);
+    transform: scale(1.04);
+    animation: slowZoom 20s ease-in-out infinite alternate;
+  }
+  @keyframes slowZoom {
+    from { transform: scale(1.04); }
+    to { transform: scale(1.0); }
+  }
+  .about-hero-gradient {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(18,8,13,0.9) 0%, rgba(18,8,13,0.2) 60%, transparent 100%);
+  }
+  .about-hero-content { position: relative; z-index: 2; max-width: 800px; }
+  .about-hero h1 {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: clamp(40px, 6.5vw, 88px);
+    font-weight: 300;
+    line-height: 1.1;
+    margin-bottom: 24px;
+  }
+  .about-hero .hero-sub {
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    color: var(--brass);
+    text-transform: uppercase;
+  }
+
+  /* INTRO SECTION */
+  .intro-section {
+    padding: 120px 80px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 120px;
+    align-items: center;
+    background: var(--bg-mid);
+  }
+  .intro-text .section-label { font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--brass); margin-bottom: 20px; display: flex; align-items: center; gap: 12px; }
+  .intro-text .section-label::before { content: ''; width: 30px; height: 1px; background: var(--brass); }
+  .intro-text h2 { font-family: var(--font-display); font-size: clamp(36px, 4.5vw, 60px); font-weight: 300; line-height: 1.1; margin-bottom: 32px; }
+  .intro-text p { font-size: 12px; line-height: 1.9; color: var(--mist); margin-bottom: 16px; max-width: 440px; }
+
+  .intro-image { position: relative; }
+  .intro-image img { width: 100%; aspect-ratio: 3/4; object-fit: cover; filter: sepia(20%) contrast(1.05) saturate(0.85) brightness(0.9); }
+  .intro-image-label {
+    position: absolute;
+    bottom: -24px; right: -24px;
+    background: var(--brass);
+    color: var(--bg-dark);
+    padding: 20px 24px;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    max-width: 180px;
+    line-height: 1.6;
+  }
+
+  /* PULLQUOTE FULL */
+  .pullquote-full {
+    background: var(--burgundy);
+    padding: 160px 80px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .pullquote-full::before {
+    content: '"';
+    position: absolute;
+    top: -80px; left: 60px;
+    font-family: var(--font-display);
+    font-size: 400px;
+    color: rgba(196,154,46,0.06);
+    pointer-events: none;
+    line-height: 1;
+  }
+  .pullquote-full blockquote {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: clamp(28px, 4.5vw, 64px);
+    font-weight: 300;
+    line-height: 1.3;
+    max-width: 900px;
+    margin: 0 auto 32px;
+    position: relative;
+    z-index: 1;
+  }
+  .pullquote-full cite {
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    color: var(--brass);
+    text-transform: uppercase;
+    font-style: normal;
+  }
+
+  /* STORY EDITORIAL */
+  .story-editorial {
+    background: var(--bg-dark);
+    padding: 120px 80px;
+  }
+  .editorial-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    align-items: center;
+    margin-bottom: 120px;
+  }
+  .editorial-row:last-child { margin-bottom: 0; }
+  .editorial-row.flip .editorial-text { order: 2; }
+  .editorial-row.flip .editorial-image { order: 1; }
+
+  .editorial-text .section-label { font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--brass); margin-bottom: 20px; display: flex; align-items: center; gap: 12px; }
+  .editorial-text .section-label::before { content: ''; width: 30px; height: 1px; background: var(--brass); }
+  .editorial-text h3 { font-family: var(--font-display); font-size: clamp(28px, 3.5vw, 48px); font-weight: 300; line-height: 1.15; margin-bottom: 24px; }
+  .editorial-text p { font-size: 12px; line-height: 1.9; color: var(--mist); margin-bottom: 16px; }
+
+  .editorial-image img { width: 100%; height: 480px; object-fit: cover; filter: sepia(20%) contrast(1.05) saturate(0.85) brightness(0.85); display: block; transition: transform 0.6s ease; }
+  .editorial-image:hover img { transform: scale(1.02); }
+  .editorial-image { overflow: hidden; }
+
+  /* TIMELINE */
+  .timeline-section {
+    background: var(--green);
+    padding: 120px 0;
+    overflow: hidden;
+  }
+  .timeline-header { padding: 0 80px; margin-bottom: 60px; }
+  .timeline-header h2 { font-family: var(--font-display); font-size: clamp(36px, 5vw, 60px); font-weight: 300; }
+
+  .timeline-scroll {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    gap: 0;
+    padding: 0 80px 40px;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .timeline-scroll::-webkit-scrollbar { display: none; }
+
+  .timeline-era {
+    flex: 0 0 380px;
+    scroll-snap-align: start;
+    padding: 0 40px 0 0;
+    border-right: 1px solid rgba(196,154,46,0.15);
+    margin-right: 40px;
+  }
+  .timeline-era:last-child { border-right: none; }
+
+  .era-year {
+    font-size: 56px;
+    font-family: var(--font-display);
+    font-weight: 700;
+    color: rgba(196,154,46,0.25);
+    line-height: 1;
+    margin-bottom: 16px;
+  }
+  .era-image { width: 100%; height: 220px; object-fit: cover; margin-bottom: 20px; filter: sepia(25%) saturate(0.8) brightness(0.85); }
+  .era-text { font-size: 12px; line-height: 1.8; color: var(--mist); }
+
+  /* YOUTUBE SECTION */
+  .yt-about {
+    background: var(--bg-mid);
+    padding: 120px 80px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    align-items: center;
+  }
+  .yt-about-text .section-label { font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--brass); margin-bottom: 20px; display: flex; align-items: center; gap: 12px; }
+  .yt-about-text .section-label::before { content: ''; width: 30px; height: 1px; background: var(--brass); }
+  .yt-about-text h2 { font-family: var(--font-display); font-size: clamp(32px, 4vw, 56px); font-weight: 300; line-height: 1.15; margin-bottom: 24px; }
+  .yt-about-text p { font-size: 12px; line-height: 1.9; color: var(--mist); margin-bottom: 24px; }
+  .yt-about-text a { font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--brass); text-decoration: none; border-bottom: 1px solid var(--brass); padding-bottom: 4px; transition: color 0.2s; }
+  .yt-about-text a:hover { color: var(--cream); border-color: var(--cream); }
+
+  .tv-body { background: var(--green); border-radius: 20px 20px 8px 8px; padding: 20px 24px 28px; box-shadow: 0 20px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(196,154,46,0.15); border: 2px solid rgba(196,154,46,0.12); transition: box-shadow 0.4s ease, border-color 0.4s; cursor: pointer; }
+  .yt-tv:hover .tv-body { box-shadow: 0 20px 80px rgba(0,0,0,0.6), 0 0 60px rgba(196,154,46,0.2); border-color: rgba(196,154,46,0.35); }
+  .tv-antenna { display: flex; justify-content: center; gap: 40px; margin-bottom: 10px; }
+  .tv-antenna-rod { width: 3px; height: 36px; background: var(--brass-dim); }
+  .tv-antenna-rod:first-child { transform: rotate(-20deg); }
+  .tv-antenna-rod:last-child { transform: rotate(20deg); }
+  .tv-screen { position: relative; aspect-ratio: 16/9; background: #000; border-radius: 6px; overflow: hidden; border: 3px solid rgba(196,154,46,0.25); }
+  .tv-screen iframe { width: 100%; height: 100%; border: none; display: none; }
+  .tv-screen iframe.playing { display: block; }
+  .tv-thumbnail { position: absolute; inset: 0; background-size: cover; background-position: center; filter: sepia(30%) saturate(0.8) brightness(0.65); transition: filter 0.3s; }
+  .yt-tv:hover .tv-thumbnail { filter: sepia(10%) saturate(0.9) brightness(0.8); }
+  .tv-play-btn { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 60px; height: 60px; background: var(--brass); border-radius: 50%; display: flex; align-items: center; justify-content: center; border: none; cursor: pointer; transition: transform 0.3s, background 0.3s; }
+  .tv-play-btn::after { content: ''; border-left: 20px solid var(--bg-dark); border-top: 12px solid transparent; border-bottom: 12px solid transparent; margin-left: 4px; }
+  .yt-tv:hover .tv-play-btn { transform: translate(-50%,-50%) scale(1.1); background: #d4a830; }
+  .tv-bottom { display: flex; justify-content: space-between; padding: 12px 4px 0; }
+  .tv-channel { font-size: 9px; letter-spacing: 0.15em; color: var(--brass); text-transform: uppercase; }
+  .tv-knobs { display: flex; gap: 8px; }
+  .tv-knob { width: 11px; height: 11px; border-radius: 50%; background: var(--brass-dim); border: 1px solid rgba(196,154,46,0.2); }
+
+  /* VALUES */
+  .values-section {
+    background: var(--bg-dark);
+    padding: 120px 80px;
+    border-top: 1px solid rgba(255,255,255,0.04);
+  }
+  .values-header { margin-bottom: 64px; }
+  .values-header h2 { font-family: var(--font-display); font-size: clamp(32px, 4vw, 56px); font-weight: 300; }
+
+  .values-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 48px;
+  }
+  .value-item { border-top: 1px solid rgba(196,154,46,0.2); padding-top: 28px; }
+  .value-num { font-size: 11px; letter-spacing: 0.2em; color: var(--brass); margin-bottom: 16px; }
+  .value-title { font-family: var(--font-display); font-size: 24px; font-weight: 400; margin-bottom: 14px; }
+  .value-text { font-size: 12px; line-height: 1.8; color: var(--mist); }
+
+  /* NEWSLETTER */
+  .newsletter-section {
+    background: var(--green);
+    padding: 120px 80px;
+    text-align: center;
+  }
+  .newsletter-section h2 { font-family: var(--font-display); font-style: italic; font-size: clamp(32px, 5vw, 64px); font-weight: 300; margin-bottom: 20px; }
+  .newsletter-section p { font-size: 12px; color: var(--mist); margin-bottom: 40px; line-height: 1.8; max-width: 440px; margin-left: auto; margin-right: auto; }
+  .nl-form { display: flex; max-width: 420px; margin: 0 auto; gap: 0; }
+  .nl-form input { flex: 1; background: rgba(0,0,0,0.3); border: 1px solid rgba(196,154,46,0.3); border-right: none; padding: 14px 20px; color: var(--cream); font-family: var(--font-mono); font-size: 11px; outline: none; }
+  .nl-form input:focus { border-color: var(--brass); }
+  .nl-form input::placeholder { color: var(--mist); }
+  .nl-form button { background: var(--brass); border: none; padding: 14px 28px; color: var(--bg-dark); font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; cursor: pointer; transition: background 0.2s; }
+  .nl-form button:hover { background: #d4a830; }
+
+  /* FOOTER */
+  footer { background: var(--bg-dark); border-top: 1px solid rgba(196,154,46,0.15); padding: 40px 80px; display: flex; justify-content: space-between; align-items: center; }
+  footer p { font-size: 11px; color: rgba(200,191,176,0.4); }
+  .social-links { display: flex; gap: 20px; }
+  .social-links a { font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--mist); text-decoration: none; transition: color 0.2s; }
+  .social-links a:hover { color: var(--brass); }
+
+  /* REVEAL */
+  .reveal { opacity: 0; transform: translateY(40px); transition: opacity 0.8s ease, transform 0.8s ease; }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+  .reveal-clip { clip-path: inset(0 0 100% 0); transition: clip-path 0.9s cubic-bezier(0.76,0,0.24,1); }
+  .reveal-clip.visible { clip-path: inset(0 0 0% 0); }
+
+  /* RESPONSIVE */
+  @media (max-width: 768px) {
+    nav { padding: 20px 24px; }
+    .nav-links { display: none; }
+    .about-hero { padding: 60px 24px; }
+    .intro-section, .yt-about { grid-template-columns: 1fr; padding: 80px 24px; gap: 40px; }
+    .intro-image-label { display: none; }
+    .pullquote-full { padding: 80px 24px; }
+    .story-editorial { padding: 80px 24px; }
+    .editorial-row { grid-template-columns: 1fr; gap: 40px; margin-bottom: 60px; }
+    .editorial-row.flip .editorial-text { order: 0; }
+    .editorial-row.flip .editorial-image { order: 0; }
+    .editorial-image img { height: 280px; }
+    .timeline-header { padding: 0 24px; }
+    .timeline-scroll { padding: 0 24px 32px; }
+    .values-section { padding: 80px 24px; }
+    .values-grid { grid-template-columns: 1fr; gap: 32px; }
+    .newsletter-section { padding: 80px 24px; }
+    footer { padding: 32px 24px; flex-direction: column; gap: 16px; text-align: center; }
+  }
+</style>
+</head>
+<body>
+<div id="cursor"></div>
+<div id="progress-bar"></div>
+
+<nav>
+  <a href="index.html" class="nav-logo">Sky<span>labs</span> Audio</a>
+  <ul class="nav-links">
+    <li><a href="products.html">Shop</a></li>
+    <li><a href="product.html">Featured</a></li>
+    <li><a href="about.html" class="active">Our Story</a></li>
+    <li><a href="#">Vinyl</a></li>
+    <li><a href="#">Contact</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<div class="about-hero">
+  <div class="about-hero-img"></div>
+  <div class="about-hero-gradient"></div>
+  <div class="about-hero-content">
+    <p class="hero-sub reveal" style="margin-bottom:20px">West Des Moines, Iowa — Est. 2016</p>
+    <h1 class="reveal" style="transition-delay:0.1s">We don't sell<br>equipment.<br>We share an<br>obsession.</h1>
+  </div>
+</div>
+
+<!-- INTRO -->
+<section class="intro-section">
+  <div class="intro-text reveal">
+    <div class="section-label">The Beginning</div>
+    <h2>A former musician who refused to quit.</h2>
+    <p>Kevin Moll spent years as a recording engineer and home audio installation specialist before he did what every audio obsessive dreams of: opened a shop dedicated entirely to the pursuit of great sound.</p>
+    <p>In 2016, Skylabs Audio opened its doors in Valley Junction — a historic shopping district in West Des Moines that still feels like the kind of place where things are made with care and sold with passion.</p>
+    <p>The mission was simple: recreate the stereo shopping experience from the golden era of hi-fi. Help people of all ages find their own blend of vintage charm and modern performance. Make the experience of buying a turntable feel the way it did in 1974.</p>
+  </div>
+  <div class="intro-image reveal" style="transition-delay:0.2s">
+    <img src="images/Headshots-Kevin.webp" alt="Kevin in the shop">
+    <div class="intro-image-label">Kevin Moll<br>Founder & Head of Sound</div>
+  </div>
+</section>
+
+<!-- PULL QUOTE -->
+<section class="pullquote-full">
+  <blockquote class="reveal">"The golden era of hi-fi was not about technology. It was about listening. We exist to bring that back."</blockquote>
+  <cite class="reveal" style="transition-delay:0.2s">— Kevin Moll, Founder</cite>
+</section>
+
+<!-- EDITORIAL STORY -->
+<section class="story-editorial">
+  <div class="editorial-row">
+    <div class="editorial-text reveal">
+      <div class="section-label">The YouTube Chapter</div>
+      <h3>180K subscribers and still learning.</h3>
+      <p>What started as a way to share repair tips with local customers became one of the most trusted vintage hi-fi channels on YouTube. Kevin publishes weekly — no scripts, no sponsors that compromise his opinions, no recommendations he wouldn't make in his own shop.</p>
+      <p>Two videos crossed one million views. Not because of algorithms or thumbnails — because they told the truth about what's worth buying and what isn't. That kind of trust takes years to build. Skylabs has been building it since day one.</p>
+    </div>
+    <div class="editorial-image reveal" style="transition-delay:0.2s">
+      <img src="images/Midwest-Largest-Selection-Vintage-Stereos-and-Speakers.webp" alt="Recording">
+    </div>
+  </div>
+
+  <div class="editorial-row flip">
+    <div class="editorial-image reveal">
+      <img src="images/New-and-Used-Records-Store-Shot.webp" alt="Online Store">
+    </div>
+    <div class="editorial-text reveal" style="transition-delay:0.2s">
+      <div class="section-label">The Online Store</div>
+      <h3>Bringing Iowa's best to the world.</h3>
+      <p>In 2023, Skylabs launched its online store — not to replace the in-store experience, but to extend it. The same careful curation, the same brands Kevin trusts, the same honest advice — now available to audiophiles in Des Moines and Düsseldorf alike.</p>
+      <p>Every product on this site is one Kevin has personally used, tested, or recommended to customers in his shop. Nothing goes online that wouldn't go into his listening room.</p>
+    </div>
+  </div>
+</section>
+
+<!-- TIMELINE -->
+<section class="timeline-section">
+  <div class="timeline-header reveal">
+    <div class="section-label" style="font-size:10px;letter-spacing:0.25em;text-transform:uppercase;color:var(--brass);margin-bottom:16px;display:flex;align-items:center;gap:12px"><span style="width:30px;height:1px;background:var(--brass);display:block"></span>The Journey</div>
+    <h2>A decade of sound.</h2>
+  </div>
+  <div class="timeline-scroll">
+    <div class="timeline-era">
+      <div class="era-year">2016</div>
+      <img class="era-image" src="https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=500&q=70" alt="2016">
+      <p class="era-text">Kevin opens Skylabs Audio in Valley Junction, West Des Moines. Six turntables, twenty vintage receivers, and an unreasonable amount of passion.</p>
+    </div>
+    <div class="timeline-era">
+      <div class="era-year">2018</div>
+      <img class="era-image" src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=500&q=70" alt="2018">
+      <p class="era-text">The YouTube channel launches. First video: how to clean a vintage turntable. Nobody expects it to go anywhere. Kevin films it anyway.</p>
+    </div>
+    <div class="timeline-era">
+      <div class="era-year">2021</div>
+      <img class="era-image" src="https://images.unsplash.com/photo-1547394765-185e1e68f34e?w=500&q=70" alt="2021">
+      <p class="era-text">50,000 YouTube subscribers. Kevin expands the shop, adds new partnerships with Rega, Wharfedale, and Grado. The community finds its voice.</p>
+    </div>
+    <div class="timeline-era">
+      <div class="era-year">2023</div>
+      <img class="era-image" src="https://images.unsplash.com/photo-1571330735066-03aaa9429d89?w=500&q=70" alt="2023">
+      <p class="era-text">Skylabs launches its online store. New authorized dealerships: Cambridge Audio, TEAC, Wharfedale, Audio Technica, Advance Paris.</p>
+    </div>
+    <div class="timeline-era">
+      <div class="era-year">2024</div>
+      <img class="era-image" src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&q=70" alt="2024">
+      <p class="era-text">89,200 subscribers. Two videos cross one million views. The Skylabs Podcast launches. The obsession, it turns out, is contagious.</p>
+    </div>
+  </div>
+</section>
+
+<!-- YOUTUBE -->
+<section class="yt-about">
+  <div class="yt-about-text reveal">
+    <div class="section-label">On YouTube</div>
+    <h2>Weekly education. Zero compromise.</h2>
+    <p>Over 300 videos. 89,000 subscribers. A weekly show about vintage stereo that's been called "smooth jazz for audio nerds" — and we'll take that as a compliment.</p>
+    <p>No sponsored opinions. No affiliate links that change what Kevin recommends. Just an experienced hand sharing what he's learned across decades of listening, repairing, and selling the world's finest audio equipment.</p>
+    <a href="https://www.youtube.com/@skylabsaudio" target="_blank">Watch on YouTube →</a>
+  </div>
+  <div class="yt-tv reveal" style="transition-delay:0.2s" onclick="playAboutVideo(this, 'QEhPHi84rq4')">
+    <div class="tv-body">
+      <div class="tv-antenna">
+        <div class="tv-antenna-rod"></div>
+        <div class="tv-antenna-rod"></div>
+      </div>
+      <div class="tv-screen">
+        <div class="tv-thumbnail" style="background-image: url('https://img.youtube.com/vi/QEhPHi84rq4/maxresdefault.jpg')"></div>
+        <button class="tv-play-btn"></button>
+        <iframe id="yt-about" src="" allowfullscreen allow="autoplay"></iframe>
+      </div>
+      <div class="tv-bottom">
+        <span class="tv-channel">CH 01 — Skylabs Audio</span>
+        <div class="tv-knobs"><div class="tv-knob"></div><div class="tv-knob"></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- VALUES -->
+<section class="values-section">
+  <div class="values-header reveal">
+    <div class="section-label" style="font-size:10px;letter-spacing:0.25em;text-transform:uppercase;color:var(--brass);margin-bottom:16px;display:flex;align-items:center;gap:12px"><span style="width:30px;height:1px;background:var(--brass);display:block"></span>What We Believe</div>
+    <h2>The Skylabs Standard</h2>
+  </div>
+  <div class="values-grid">
+    <div class="value-item reveal" style="transition-delay:0s">
+      <div class="value-num">01</div>
+      <h3 class="value-title">Honest Curation</h3>
+      <p class="value-text">We only sell what we'd put in our own systems. Every product on this site has been personally vetted. We are an authorized dealer for every brand we carry.</p>
+    </div>
+    <div class="value-item reveal" style="transition-delay:0.12s">
+      <div class="value-num">02</div>
+      <h3 class="value-title">Real Knowledge</h3>
+      <p class="value-text">Kevin has spent decades as a musician, recording engineer, and installation specialist. When he recommends something, it comes from years of experience — not a press release.</p>
+    </div>
+    <div class="value-item reveal" style="transition-delay:0.24s">
+      <div class="value-num">03</div>
+      <h3 class="value-title">The Community</h3>
+      <p class="value-text">180K YouTube subscribers. A Discord server full of audiophiles helping each other. Vintage stereo is not a hobby. It is a community built around the shared love of great sound.</p>
+    </div>
+  </div>
+</section>
+
+<!-- NEWSLETTER -->
+<section class="newsletter-section">
+  <h2 class="reveal">Stay in the listening room.</h2>
+  <p class="reveal" style="transition-delay:0.1s">New arrivals, Kevin's latest YouTube videos, and the occasional opinion about why your system needs a better turntable.</p>
+  <div class="nl-form reveal" style="transition-delay:0.2s">
+    <input type="email" placeholder="your@email.com">
+    <button>Subscribe</button>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <p>© 2024 Skylabs Audio — Valley Junction, West Des Moines, Iowa</p>
+  <div class="social-links">
+    <a href="https://www.youtube.com/@skylabsaudio" target="_blank">YouTube</a>
+    <a href="https://www.instagram.com/skylabsiowa/" target="_blank">Instagram</a>
+    <a href="https://www.facebook.com/skylabsiowa" target="_blank">Facebook</a>
+    <a href="https://www.tiktok.com/@skylabsvintageaudio" target="_blank">TikTok</a>
+  </div>
+</footer>
+
+<script>
+  const cursor = document.getElementById('cursor');
+  let cX=0,cY=0,tX=0,tY=0;
+  const isTouch = () => window.matchMedia('(pointer:coarse)').matches;
+  document.addEventListener('mousemove', e => { tX=e.clientX; tY=e.clientY; });
+  function animCur() { cX+=(tX-cX)*0.12; cY+=(tY-cY)*0.12; cursor.style.left=cX+'px'; cursor.style.top=cY+'px'; requestAnimationFrame(animCur); }
+  if(!isTouch()) { animCur(); document.querySelectorAll('a,button,.yt-tv').forEach(el=>{ el.addEventListener('mouseenter',()=>cursor.classList.add('expanded')); el.addEventListener('mouseleave',()=>cursor.classList.remove('expanded')); }); }
+  else cursor.style.display='none';
+
+  window.addEventListener('scroll', () => { document.getElementById('progress-bar').style.height=(window.scrollY/(document.body.scrollHeight-window.innerHeight)*100)+'%'; });
+
+  const obs = new IntersectionObserver(entries=>{ entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('visible'); obs.unobserve(e.target); } }); },{threshold:0.1});
+  document.querySelectorAll('.reveal,.reveal-clip').forEach(el=>obs.observe(el));
+
+  function playAboutVideo(frame, videoId) {
+    const screen = frame.querySelector('.tv-screen');
+    screen.querySelector('.tv-thumbnail').style.opacity = '0';
+    screen.querySelector('.tv-play-btn').style.opacity = '0';
+    const iframe = document.getElementById('yt-about');
+    iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1`;
+    iframe.classList.add('playing');
+  }
+</script>
+</body>
+</html>
